@@ -6,6 +6,14 @@
 *.user
 *.sln.docstates
 
+# Manually Added
+.Properties/
+.Files/
+App.config
+*.csproj
+*.resx
+*.sln
+
 # Build results
 [Dd]ebug/
 [Dd]ebugPublic/
