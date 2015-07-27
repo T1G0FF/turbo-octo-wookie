@@ -100,6 +100,7 @@ namespace Assignment1
         private void listCrozzle_Initialize()
         {
             listCrozzle.Margin = new Padding(PADDING);
+            listCrozzle.Font = new Font(FontFamily.GenericMonospace, 9.0F);
         }
 
         private void listCrozzle_SetSize()
