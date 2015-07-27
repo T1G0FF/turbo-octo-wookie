@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.IO;
+using System.Linq;
 using CrozzleExceptions;
 
 namespace Assignment1
@@ -103,8 +104,10 @@ namespace Assignment1
                             }
 
                             int tempLength = row.Length - 4;
-                            _wordlist = new string[tempLength];
-                            Array.ConstrainedCopy(row, 4, _wordlist, 0, tempLength);
+                            string[] tempArray = new string[tempLength];
+                            Array.ConstrainedCopy(row, 4, tempArray, 0, tempLength);
+                            
+                            _wordlist = tempArray.OrderBy(s => s.Length).ToArray();
 
                             IsValid = true;
                         }
