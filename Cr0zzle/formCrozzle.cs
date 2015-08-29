@@ -2,6 +2,7 @@
 using System.IO;
 using System.Drawing;
 using System.Windows.Forms;
+using System.Collections.Generic;
 
 namespace Assignment1
 {
@@ -21,13 +22,20 @@ namespace Assignment1
             this.AutoSize = true;
             this.AutoSizeMode = AutoSizeMode.GrowAndShrink;
             this.Text = "Crozzle";
-            
+
             InitializeComponent();
 
             gridCrozzle_Initialize();
             listCrozzle_Initialize();
+            lblScoreTitle_Initialize();
+            lblScore_Initialize();
             btnSelectCrozzle_Initialize();
             btnSelectWordlist_Initialize();
+            btnValidate_Initialize();
+
+            LogFile.WriteLine(new String('=', 60));
+            LogFile.WriteLine("Crozzle Log - {0}", DateTime.Now.ToString());
+            LogFile.WriteLine(new String('=', 60));
         }
 
         #region Datagrid - Crozzle
@@ -56,8 +64,8 @@ namespace Assignment1
 
         private void gridCrozzle_SetSize(int crozzleWidth, int crozzleHeight)
         {
-            gridCrozzle.RowCount = crozzleWidth;
-            gridCrozzle.ColumnCount = crozzleHeight;
+            gridCrozzle.RowCount = crozzleHeight;
+            gridCrozzle.ColumnCount = crozzleWidth;
 
             foreach (DataGridViewRow r in gridCrozzle.Rows)
             {
@@ -105,10 +113,13 @@ namespace Assignment1
 
         private void listCrozzle_SetSize()
         {
-            listCrozzle.Height = gridCrozzle.Height + gridCrozzle.Margin.Vertical + btnSelectCrozzle.Height;
+            listCrozzle.Height = gridCrozzle.Height + gridCrozzle.Margin.Top - (lblScore.Height + lblScore.Margin.Vertical);
             listCrozzle.Width = 200;
 
-            listCrozzle.Location = new Point(gridCrozzle.Width + gridCrozzle.Margin.Horizontal, PADDING);
+            listCrozzle.Location = new Point(
+                gridCrozzle.Width + gridCrozzle.Margin.Horizontal, 
+                lblScore.Height + lblScore.Margin.Vertical
+                );
         }
 
         private void listCrozzle_LoadData()
@@ -148,23 +159,36 @@ namespace Assignment1
             if (openFileDialog.ShowDialog() == DialogResult.OK)
             {
                 string tempName = openFileDialog.FileName;
+
                 if (File.Exists(tempName))
                 {
                     try
                     {
                         crozzle = new Crozzle(tempName);
-                        gridCrozzle_SetSize(crozzle.Width, crozzle.Height);
-                        listCrozzle_SetSize();
-                        btnSelectCrozzle_SetSize();
-                        btnSelectWordlist_SetSize();
 
-                        gridCrozzle_LoadData();
+                        if (crozzle.ValidFile)
+                        {
+                            gridCrozzle_SetSize(crozzle.Width, crozzle.Height);
+                            listCrozzle_SetSize();
+                            lblScoreTitle_SetSize();
+                            lblScore_SetSize();
+                            btnSelectCrozzle_SetSize();
+                            btnSelectWordlist_SetSize();
+                            btnValidate_SetSize();
 
-                        CrozzleFound = true;
+                            gridCrozzle_LoadData();
+
+                            CrozzleFound = true;
+                        }
+                        else
+                        {
+                            gridCrozzle.Rows.Clear();
+                            MessageBox.Show("Invalid crozzle file! Check the log for details.");
+                        }
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine(ex.Message); // TODO Write to log
+                        LogFile.WriteLine(ex.Message);
                         return;
                     }
                 }
@@ -194,7 +218,7 @@ namespace Assignment1
             openFileDialog.FilterIndex = 2;
             openFileDialog.RestoreDirectory = true;
 
-            openFileDialog.Title = "Select the Wordlist file to load...";
+            openFileDialog.Title = "Select the Word list file to load...";
             openFileDialog.Filter = "csv files (*.csv)|*.csv";
             if (openFileDialog.ShowDialog() == DialogResult.OK)
             {
@@ -205,17 +229,121 @@ namespace Assignment1
                     {
                         wordlist = new Wordlist(tempName);
 
-                        listCrozzle_LoadData();
+                        if (wordlist.ValidFile)
+                        {
+                            listCrozzle_LoadData();
+                        }
+                        else
+                        {
+                            listCrozzle.Items.Clear();
+                            MessageBox.Show("Invalid Word list file! Check the log for details.");
+                        }
 
                         WordlistFound = true;
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine(ex.Message); // TODO Write to log
+                        LogFile.WriteLine(ex.Message);
                         return;
                     }
                 }
             }
+        }
+        #endregion
+
+        #region Button - Validate
+        private void btnValidate_Initialize()
+        {
+            btnValidate.Margin = new Padding(PADDING);
+        }
+
+        private void btnValidate_SetSize()
+        {
+            btnValidate.Location = new Point(
+                gridCrozzle.Width + gridCrozzle.Margin.Horizontal + ((listCrozzle.Width / 2) - (btnValidate.Width / 2)),
+                gridCrozzle.Height + gridCrozzle.Margin.Vertical
+                );
+        }
+
+        private void btnValidate_Click(object sender, EventArgs e)
+        {
+            if ((CrozzleFound && WordlistFound))
+            {
+                if (crozzle.ValidFile && wordlist.ValidFile)
+                {
+                    if (wordlist.Height == crozzle.Height && wordlist.Width == crozzle.Width)
+                    {
+                        try
+                        {
+                            Crozzle ValidatedCrozzle = CrozzleValidation.Validate(crozzle, wordlist);
+
+                            if (ValidatedCrozzle != null)
+                            {
+                                crozzle = ValidatedCrozzle;
+                                string score = CrozzleValidation.GetScore(crozzle, wordlist).ToString();
+                                lblScore.Text = score;
+#if DEBUG
+                                LogFile.WriteLine("\t[INFO] Crozzle is Valid! Score: {0}", score);
+#endif
+                                
+                            }
+                            else
+                            {
+                                LogFile.WriteLine("\t[!ERROR!] Crozzle is Invalid!");
+                                lblScore.Text = "-1";
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            LogFile.WriteLine(ex.Message);
+                            lblScore.Text = "-1";
+                            return;
+                        }
+                    }
+                    else
+                    {
+                        LogFile.WriteLine("\t[!ERROR!] Word list Dimensions do not match Crozzle Dimensions ([{0},{1}] != [{2},{3}])",
+                            wordlist.Width,
+                            crozzle.Width,
+                            wordlist.Height,
+                            crozzle.Height
+                            );
+                        lblScore.Text = "-1";
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("One or more of your files did not pass validation!");
+                    lblScore.Text = "-1";
+                }
+            }
+            else
+            {
+                MessageBox.Show("You must select both a crozzle and a word list to perform validation!");
+                lblScore.Text = "-1";
+            }
+        }
+        #endregion
+
+        #region Labels - Score
+        private void lblScoreTitle_Initialize()
+        {
+            lblScoreTitle.Margin = new Padding(PADDING);
+        }
+
+        private void lblScoreTitle_SetSize()
+        {
+            lblScoreTitle.Location = new Point(gridCrozzle.Width + gridCrozzle.Margin.Horizontal, PADDING);
+        }
+
+        private void lblScore_Initialize()
+        {
+            lblScore.Margin = new Padding(PADDING);
+        }
+
+        private void lblScore_SetSize()
+        {
+            lblScore.Location = new Point(gridCrozzle.Width + gridCrozzle.Margin.Horizontal + lblScoreTitle.Width + lblScoreTitle.Margin.Horizontal, PADDING);
         }
         #endregion
     }

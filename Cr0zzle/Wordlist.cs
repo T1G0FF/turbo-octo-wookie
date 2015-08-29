@@ -2,7 +2,6 @@
 using System.Collections;
 using System.IO;
 using System.Linq;
-using CrozzleExceptions;
 
 namespace Assignment1
 {
@@ -10,66 +9,86 @@ namespace Assignment1
     {
         #region Properties
         public string Difficulty { get; private set; }
-        
+
         private string[] _wordlist { get; set; }
         public string this[int index]
-        {   get
-            {   return _wordlist[index];
+        {
+            get
+            {
+                return _wordlist[index];
             }
         }
-        
+
         public int WordCount
-        {   get
-            {   return _wordlist.Length;
+        {
+            get
+            {
+                return _wordlist.Length;
             }
         }
         #endregion
 
         #region Constructor
-        public Wordlist(string filePath) : base(filePath)
+        public Wordlist(string filePath)
+            : base(filePath)
         {
-            if ( File.Exists(FilePath) == false)    // Check file exists
+            LogFile.WriteLine("[Wordlist] - '{0}'", FilePath);
+
+            if (File.Exists(FilePath) == false)    // Check file exists
             {
-                throw new FileNotFoundException(String.Format("Wordlist file not found - {0}", FilePath));
+                string error = String.Format("\t[!ERROR!] Word list file not found!");
+                LogFile.WriteLine(error);
+                //throw new FileNotFoundException(error);
             }
             else
             {
-                if (LoadData() == false)            // Check file format, load if valid
+                ValidFile = LoadData();
+                if (ValidFile == false)            // Check file format, load if valid
                 {
-                    throw new WordlistFileFormatException(FilePath);
+                    string error = String.Format("\t[WARN] The correct word list format is: [No. of Words] [Height] [Width] [Difficulty] [Word list]");
+                    LogFile.WriteLine(error);
+                    //throw new InvalidDataException(error);
                 }
             }
         }
         #endregion
 
         #region Public Methods
-        public bool Find(string query)
+        public bool Contains(string query)
+        {
+            return _wordlist.Contains(query);
+        }
+
+        public bool StartsWith(string query)
         {
             foreach (string word in _wordlist)
-			{	if( query.Equals(word) )
-				{	return true;
-				}
-			}
-			return false;
-		}
+            {
+                if (word.StartsWith(query))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
         #endregion
 
         #region Private Methods
         private bool LoadData()
         {
-            bool IsValid = false;	// Default to Invalid
+            bool IsValid = true;	// Default to Valid
             int RowCount = 0;
 
-            try
-            {
-                RowCount = File.ReadAllLines(FilePath).Length;
+            RowCount = File.ReadAllLines(FilePath).Length;
 
-                if (RowCount == 1)
+            if (RowCount == 1)
+            {
+                try
                 {
                     using (FileStream fs = File.Open(FilePath, FileMode.Open, FileAccess.Read))
                     {
                         using (StreamReader sr = new StreamReader(fs))
                         {
+                            bool runningValidity = false;
                             char[] _separator = new char[] { ',' };
 
                             string[] row = sr.ReadLine().Split(_separator);
@@ -78,17 +97,58 @@ namespace Assignment1
 
                             int tempWordCount = 0;
                             if (int.TryParse(row[0], out tempWordCount) == false)
-                                throw new InvalidDataException(String.Format("{0} is not a valid Integer [Word count]", row[0]));
-
-                            int tempCrozzleWidth = 0;
-                            if (int.TryParse(row[1], out tempCrozzleWidth) == false)
-                                throw new InvalidDataException(String.Format("{0} is not a valid Integer [Width]", row[1]));
-                            Width = tempCrozzleWidth;
+                            {
+                                LogFile.WriteLine("\t[!ERROR!] {0} is not a valid Integer [Word count]", row[0]);
+                                IsValid = IsValid & false;
+                            }
+                            else
+                            {
+                                IsValid = IsValid & true;
+                            }
 
                             int tempCrozzleHeight = 0;
-                            if (int.TryParse(row[2], out tempCrozzleHeight) == false)
-                                throw new InvalidDataException(String.Format("{0} is not a valid Integer [Height]", row[2]));
-                            Height = tempCrozzleHeight;
+                            if (int.TryParse(row[1], out tempCrozzleHeight) == false)
+                            {
+                                LogFile.WriteLine("\t[!ERROR!] {0} is not a valid Integer [Height]", row[1]);
+                                IsValid = IsValid & false;
+                            }
+                            else if (tempCrozzleHeight < 4)
+                            {
+                                LogFile.WriteLine("\t[!ERROR!] Crozzle Height must be greater than 4 ({0} < 4)", tempCrozzleHeight);
+                                IsValid = IsValid & false;
+                            }
+                            else if (tempCrozzleHeight > 400)
+                            {
+                                LogFile.WriteLine("\t[!ERROR!] Crozzle Height must be less than 400 ({0} > 400)", tempCrozzleHeight);
+                                IsValid = IsValid & false;
+                            }
+                            else
+                            {
+                                Height = tempCrozzleHeight;
+                                IsValid = IsValid & true;
+                            }
+                            
+                            int tempCrozzleWidth = 0;
+                            if (int.TryParse(row[2], out tempCrozzleWidth) == false)
+                            {
+                                LogFile.WriteLine("\t[!ERROR!] {0} is not a valid Integer [Width]", row[2]);
+                                IsValid = IsValid & false;
+                            }
+                            else if (tempCrozzleWidth < 4)
+                            {
+                                LogFile.WriteLine("\t[!ERROR!] Crozzle Width must be greater than 4 ({0} < 4)", tempCrozzleWidth);
+                                IsValid = IsValid & false;
+                            }
+                            else if (tempCrozzleWidth > 400)
+                            {
+                                LogFile.WriteLine("\t[!ERROR!] Crozzle Width must be less than 400 ({0} > 400)", tempCrozzleWidth);
+                                IsValid = IsValid & false;
+                            }
+                            else
+                            {
+                                Width = tempCrozzleWidth;
+                                IsValid = IsValid & true;
+                            }
 
                             string tempDifficulty = row[3];
                             switch (tempDifficulty.ToUpper())
@@ -98,28 +158,56 @@ namespace Assignment1
                                 case "HARD":
                                 case "EXTREME":
                                     Difficulty = tempDifficulty.ToUpper();
+                                    IsValid = IsValid & true;
                                     break;
                                 default:
-                                    throw new InvalidDataException(String.Format("{0} is not a valid Difficulty", row[3]));
+                                    LogFile.WriteLine("\t[!ERROR!] {0} is not a valid Difficulty", row[3]);
+                                    IsValid = IsValid & false;
+                                    break;
                             }
 
                             int tempLength = row.Length - 4;
                             string[] tempArray = new string[tempLength];
                             Array.ConstrainedCopy(row, 4, tempArray, 0, tempLength);
-                            
-                            _wordlist = tempArray.OrderBy(s => s.Length).ToArray();
 
-                            IsValid = true;
+                            _wordlist = tempArray.OrderBy(s => s.Length).ToArray();
+                            int duplicateCheck = tempArray.Distinct().ToArray().Length;
+
+                            if (_wordlist.Length != tempWordCount)
+                            {
+                                LogFile.WriteLine("\t[!ERROR!] Word count does not equal the number of given words ({0} != {1})", tempWordCount, _wordlist.Length);
+                                IsValid = IsValid & false;
+                            }
+                            else if(_wordlist.Length != duplicateCheck)
+                            {
+                                LogFile.WriteLine("\t[!ERROR!] {0} duplicate words found!", _wordlist.Length - duplicateCheck);
+                                IsValid = IsValid & false;
+                            }
+                            else if(_wordlist.Length < 10)
+                            {
+                                LogFile.WriteLine("\t[!ERROR!] Word list must contain more than 10 words ({0} < 10)", _wordlist.Length);
+                                IsValid = IsValid & false;
+                            }
+                            else if (_wordlist.Length > 1000)
+                            {
+                                LogFile.WriteLine("\t[!ERROR!] Word list must contain no more than 1000 words ({0} > 1000)", _wordlist.Length);
+                                IsValid = IsValid & false;
+                            }
+                            else
+                            {
+                                IsValid = IsValid & true;
+                            }
                         }
                     }
                 }
+                catch (Exception ex)
+                {
+                    LogFile.WriteLine(ex.Message);
+                    throw;
+                }
+            }
 
-                return IsValid;
-            }
-            catch
-            {
-                throw;
-            }
+            return IsValid;
         }
         #endregion
 
