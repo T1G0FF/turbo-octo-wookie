@@ -6,8 +6,8 @@ namespace Assignment1
 {
     public static class LogFile
     {
-        public static string folderPath = Directory.GetParent(Directory.GetCurrentDirectory()).Parent.Parent.FullName + Path.DirectorySeparatorChar + @"Log Files" + Path.DirectorySeparatorChar;
-        public static string filePath = folderPath + @"Log.txt";
+        public static string folderPath = Directory.GetParent(Directory.GetCurrentDirectory()).Parent.Parent.FullName + Path.DirectorySeparatorChar + "Log Files" + Path.DirectorySeparatorChar;
+        public static string filePath = folderPath + "Log" + "_" + DateTime.UtcNow.ToString("yyyy-MM-dd") + ".txt";
 
         public static void WriteLine(string text, params object[] args)
         {
