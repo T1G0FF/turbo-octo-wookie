@@ -260,7 +260,7 @@ namespace Assignment1
                 LogFile.WriteLine("\t[!ERROR!] You can only have one group of connected words!");
                 Valid = false;
             }
-            
+
             return Valid;
         }
 
@@ -468,22 +468,25 @@ namespace Assignment1
             {
                 if (CrozzleToValidate.IntersectedWords.ContainsKey(pair.Key))
                 {
+                    int intersectionCount = 0;
                     switch (WordlistToValidate.Difficulty)
                     {
                         case "EASY":
                         case "MEDIUM":
-                            if (CrozzleToValidate.IntersectedWords[pair.Key].Count < 1 || CrozzleToValidate.IntersectedWords[pair.Key].Count > 2)
+                            intersectionCount = CrozzleToValidate.IntersectedWords[pair.Key].Count;
+                            if (intersectionCount < 1 || intersectionCount > 2)
                             {
-                                LogFile.WriteLine("\t[!ERROR!] {0} must intersect 1 or 2 other valid words", pair.Key);
+                                LogFile.WriteLine("\t[!ERROR!] {0} must intersect 1 or 2 other valid words ({1})", pair.Key, intersectionCount);
                                 Valid = Valid & false;
                             }
                             break;
 
                         case "HARD":
                         case "EXTREME":
-                            if (CrozzleToValidate.IntersectedWords[pair.Key].Count < 1)
+                            intersectionCount = CrozzleToValidate.IntersectedWords[pair.Key].Count;
+                            if (intersectionCount < 1)
                             {
-                                LogFile.WriteLine("\t[!ERROR!] {0} must intersect 1 or more other valid words", pair.Key);
+                                LogFile.WriteLine("\t[!ERROR!] {0} must intersect 1 or more other valid words ({1})", pair.Key, intersectionCount);
                                 Valid = Valid & false;
                             }
                             break;
@@ -491,7 +494,7 @@ namespace Assignment1
                 }
                 else
                 {
-                    LogFile.WriteLine("\t[!ERROR!] {0} must intersect at least 1 other valid word", pair.Key);
+                    LogFile.WriteLine("\t[!ERROR!] {0} must intersect at least 1 other valid word (0)", pair.Key);
                     Valid = Valid & false;
                 }
             }
