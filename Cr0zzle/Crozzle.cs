@@ -89,7 +89,7 @@ namespace Assignment1
                                     LogFile.WriteLine("\t[!ERROR!] Crozzle contains invalid characters ({0})", errorLine);
                                     IsValid = IsValid & false;
                                 }
-                                
+
                                 _crozzle[y] = currentLine.ToCharArray();
 
                                 if (prevWidth == -1)

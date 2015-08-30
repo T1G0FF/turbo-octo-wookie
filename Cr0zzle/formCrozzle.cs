@@ -117,7 +117,7 @@ namespace Assignment1
             listCrozzle.Width = 200;
 
             listCrozzle.Location = new Point(
-                gridCrozzle.Width + gridCrozzle.Margin.Horizontal, 
+                gridCrozzle.Width + gridCrozzle.Margin.Horizontal,
                 lblScore.Height + lblScore.Margin.Vertical
                 );
         }
@@ -285,7 +285,7 @@ namespace Assignment1
 #if DEBUG
                                 LogFile.WriteLine("\t[INFO] Crozzle is Valid! Score: {0}", score);
 #endif
-                                
+
                             }
                             else
                             {
