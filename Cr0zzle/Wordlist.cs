@@ -2,6 +2,7 @@
 using System.Collections;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace Assignment1
 {
@@ -88,7 +89,6 @@ namespace Assignment1
                     {
                         using (StreamReader sr = new StreamReader(fs))
                         {
-                            bool runningValidity = false;
                             char[] _separator = new char[] { ',' };
 
                             string[] row = sr.ReadLine().Split(_separator);
@@ -98,7 +98,17 @@ namespace Assignment1
                             int tempWordCount = 0;
                             if (int.TryParse(row[0], out tempWordCount) == false)
                             {
-                                LogFile.WriteLine("\t[!ERROR!] {0} is not a valid Integer [Word count]", row[0]);
+                                LogFile.WriteLine("\t[!ERROR!] '{0}' is not a valid Integer [Word count]", row[0]);
+                                IsValid = IsValid & false;
+                            }
+                            else if (tempWordCount < 10)
+                            {
+                                LogFile.WriteLine("\t[!ERROR!] Word list must contain more than 10 words ({0} < 10)", tempWordCount);
+                                IsValid = IsValid & false;
+                            }
+                            else if (tempWordCount > 1000)
+                            {
+                                LogFile.WriteLine("\t[!ERROR!] Word list must contain no more than 1000 words ({0} > 1000)", tempWordCount);
                                 IsValid = IsValid & false;
                             }
                             else
@@ -109,7 +119,7 @@ namespace Assignment1
                             int tempCrozzleHeight = 0;
                             if (int.TryParse(row[1], out tempCrozzleHeight) == false)
                             {
-                                LogFile.WriteLine("\t[!ERROR!] {0} is not a valid Integer [Height]", row[1]);
+                                LogFile.WriteLine("\t[!ERROR!] '{0}' is not a valid Integer [Height]", row[1]);
                                 IsValid = IsValid & false;
                             }
                             else if (tempCrozzleHeight < 4)
@@ -127,11 +137,11 @@ namespace Assignment1
                                 Height = tempCrozzleHeight;
                                 IsValid = IsValid & true;
                             }
-                            
+
                             int tempCrozzleWidth = 0;
                             if (int.TryParse(row[2], out tempCrozzleWidth) == false)
                             {
-                                LogFile.WriteLine("\t[!ERROR!] {0} is not a valid Integer [Width]", row[2]);
+                                LogFile.WriteLine("\t[!ERROR!] '{0}' is not a valid Integer [Width]", row[2]);
                                 IsValid = IsValid & false;
                             }
                             else if (tempCrozzleWidth < 4)
@@ -161,7 +171,7 @@ namespace Assignment1
                                     IsValid = IsValid & true;
                                     break;
                                 default:
-                                    LogFile.WriteLine("\t[!ERROR!] {0} is not a valid Difficulty", row[3]);
+                                    LogFile.WriteLine("\t[!ERROR!] '{0}' is not a valid Difficulty", row[3]);
                                     IsValid = IsValid & false;
                                     break;
                             }
@@ -178,24 +188,23 @@ namespace Assignment1
                                 LogFile.WriteLine("\t[!ERROR!] Word count does not equal the number of given words ({0} != {1})", tempWordCount, _wordlist.Length);
                                 IsValid = IsValid & false;
                             }
-                            else if(_wordlist.Length != duplicateCheck)
+                            else if (_wordlist.Length != duplicateCheck)
                             {
                                 LogFile.WriteLine("\t[!ERROR!] {0} duplicate words found!", _wordlist.Length - duplicateCheck);
-                                IsValid = IsValid & false;
-                            }
-                            else if(_wordlist.Length < 10)
-                            {
-                                LogFile.WriteLine("\t[!ERROR!] Word list must contain more than 10 words ({0} < 10)", _wordlist.Length);
-                                IsValid = IsValid & false;
-                            }
-                            else if (_wordlist.Length > 1000)
-                            {
-                                LogFile.WriteLine("\t[!ERROR!] Word list must contain no more than 1000 words ({0} > 1000)", _wordlist.Length);
                                 IsValid = IsValid & false;
                             }
                             else
                             {
                                 IsValid = IsValid & true;
+                            }
+
+                            foreach (string s in _wordlist)
+                            {
+                                if (ContainsInvalidChars(s))
+                                {
+                                    LogFile.WriteLine("\t[!ERROR!] '{0}' is not a valid word!", s);
+                                    IsValid = IsValid & false;
+                                }
                             }
                         }
                     }
@@ -210,6 +219,12 @@ namespace Assignment1
             return IsValid;
         }
         #endregion
+
+        private bool ContainsInvalidChars(string s)
+        {
+            Regex rgx = new Regex(@"^[a-zA-Z ]+$");
+            return !rgx.IsMatch(s);
+        }
 
         public IEnumerator GetEnumerator()
         {
