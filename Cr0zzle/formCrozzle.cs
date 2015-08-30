@@ -33,6 +33,11 @@ namespace Assignment1
             btnSelectWordlist_Initialize();
             btnValidate_Initialize();
 
+            if(Directory.Exists(LogFile.folderPath) == false)
+            {
+                Directory.CreateDirectory(LogFile.folderPath);
+            }
+
             LogFile.WriteLine(new String('=', 60));
             LogFile.WriteLine("Crozzle Log - {0}", DateTime.Now.ToString());
             LogFile.WriteLine(new String('=', 60));
