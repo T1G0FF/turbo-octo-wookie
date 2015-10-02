@@ -24,7 +24,13 @@ namespace Assignment1
         }
         #endregion
 
-        #region Constructor
+        #region Constructors
+        public Crozzle(char[][] generated)
+            : base("Generated Crozzle")
+        {
+            _crozzle = generated;
+        }
+
         public Crozzle(string filePath)
             : base(filePath)
         {
@@ -34,7 +40,6 @@ namespace Assignment1
             {
                 string error = String.Format("\t[!ERROR!] Crozzle file not found!");
                 LogFile.WriteLine(error);
-                //throw new FileNotFoundException(error);
             }
             else
             {
@@ -43,7 +48,6 @@ namespace Assignment1
                 {
                     string error = String.Format("\t[WARN] A crozzle must be placed within the first several lines and first several columns of a file, with spaces for empty squares");
                     LogFile.WriteLine(error);
-                    //throw new InvalidDataException(error);
                 }
             }
         }

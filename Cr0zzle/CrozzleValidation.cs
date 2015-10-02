@@ -148,10 +148,25 @@ namespace Assignment1
             return runningTotal;
         }
 
-        private static int getLetterScore(char c)
+        public static int GetWordScore(string difficulty, string s)
         {
             int score = 0;
-            switch (WordlistToValidate.Difficulty)
+            foreach(char c in s)
+            {
+                score += getLetterScore(difficulty, c);
+            }
+            return score;
+        }
+
+        private static int getLetterScore(char c)
+        {
+            return getLetterScore(WordlistToValidate.Difficulty, c);
+        }
+
+        private static int getLetterScore(string difficulty, char c)
+        {
+            int score = 0;
+            switch (difficulty)
             {
                 case "EASY":
                     score = 1;
@@ -399,33 +414,36 @@ namespace Assignment1
         #region Word Validation
         private static bool checkPartialWord(string word)
         {
+            bool Valid = true;
             if (WordlistToValidate.StartsWith(word) == false)
             {
                 LogFile.WriteLine("\t[WARN] No words in the Word list start with {0}", word);
-                return false;
+                Valid = false;
             }
-            return true;
+            return Valid;
         }
 
         private static bool checkFullWord(string word)
         {
+            bool Valid = true;
             if (WordlistToValidate.Contains(word) == false)
             {
                 LogFile.WriteLine("\t[!ERROR!] Word not found! ({0})", word);
-                return false;
+                Valid = Valid & false;
             }
             else if (CrozzleToValidate.Words.ContainsKey(word))
             {
                 LogFile.WriteLine("\t[!ERROR!] Duplicate word found! ({0})", word);
-                return false;
+                Valid = Valid & false;
             }
             else
             {
 #if DEBUG
                 LogFile.WriteLine("\t[INFO] New valid word found! ({0})", word);
 #endif
-                return true;
+                
             }
+            return Valid;
         }
         #endregion
 
@@ -505,13 +523,13 @@ namespace Assignment1
         #region Easy - Touching Words Detection - Horizontal
         private static bool wordProximityHori(int x, int y)
         {
+            bool Valid = true;
             if (y > 0 && x > 0)    // Checks row above for touching words
             {
                 if (isLetter(CrozzleToValidate[x, y - 1]) && isLetter(CrozzleToValidate[x - 1, y - 1]))
                 {
                     LogFile.WriteLine("\t[!ERROR!] Touching word found at [{0}, {1}]", x, y);
-                    //throw new CrozzleWordProximityException();
-                    return false;
+                    Valid = Valid & false;
                 }
             }
 
@@ -520,23 +538,22 @@ namespace Assignment1
                 if (isLetter(CrozzleToValidate[x, y + 1]) && isLetter(CrozzleToValidate[x - 1, y + 1]))
                 {
                     LogFile.WriteLine("\t[!ERROR!] Touching word found at [{0}, {1}]", x, y);
-                    //throw new CrozzleWordProximityException();
-                    return false;
+                    Valid = Valid & false;
                 }
             }
 
-            return true;
+            return Valid;
         }
 
         private static bool wordProximityHoriFinal(int x, int y)
         {
+            bool Valid = true;
             if (y > 0 && x + 1 < CrozzleToValidate.Width)    // Checks row above for touching words on last letter
             {
                 if (isLetter(CrozzleToValidate[x, y - 1]) && isLetter(CrozzleToValidate[x + 1, y - 1]))
                 {
                     LogFile.WriteLine("\t[!ERROR!] Touching word found at [{0}, {1}]", x, y);
-                    //throw new CrozzleWordProximityException();
-                    return false;
+                    Valid = Valid & false;
                 }
             }
 
@@ -545,25 +562,24 @@ namespace Assignment1
                 if (isLetter(CrozzleToValidate[x, y + 1]) && isLetter(CrozzleToValidate[x + 1, y + 1]))
                 {
                     LogFile.WriteLine("\t[!ERROR!] Touching word found at [{0}, {1}]", x, y);
-                    //throw new CrozzleWordProximityException();
-                    return false;
+                    Valid = Valid & false;
                 }
             }
 
-            return true;
+            return Valid;
         }
         #endregion
 
         #region Easy - Touching Words Detection - Vertical
         private static bool wordProximityVert(int x, int y)
         {
+            bool Valid = true;
             if (x > 0 && y > 0)    // Checks left column for touching words
             {
                 if (isLetter(CrozzleToValidate[x - 1, y]) && isLetter(CrozzleToValidate[x - 1, y - 1]))
                 {
                     LogFile.WriteLine("\t[!ERROR!] Touching word found at [{0}, {1}]", x, y);
-                    //throw new CrozzleWordProximityException();
-                    return false;
+                    Valid = Valid & false;
                 }
             }
 
@@ -572,22 +588,22 @@ namespace Assignment1
                 if (isLetter(CrozzleToValidate[x + 1, y]) && isLetter(CrozzleToValidate[x + 1, y - 1]))
                 {
                     LogFile.WriteLine("\t[!ERROR!] Touching word found at [{0}, {1}]", x, y);
-                    //throw new CrozzleWordProximityException();
-                    return false;
+                    Valid = Valid & false;
                 }
             }
 
-            return true;
+            return Valid;
         }
 
         private static bool wordProximityVertFinal(int x, int y)
         {
+            bool Valid = true;
             if (x > 0 && y + 1 < CrozzleToValidate.Height)    // Checks left column for touching words on last letter
             {
                 if (isLetter(CrozzleToValidate[x - 1, y]) && isLetter(CrozzleToValidate[x - 1, y + 1]))
                 {
                     LogFile.WriteLine("\t[!ERROR!] Touching word found at [{0}, {1}]", x, y);
-                    //throw new CrozzleWordProximityException();
+                    Valid = Valid & false;
                 }
             }
 
@@ -596,11 +612,11 @@ namespace Assignment1
                 if (isLetter(CrozzleToValidate[x + 1, y]) && isLetter(CrozzleToValidate[x + 1, y + 1]))
                 {
                     LogFile.WriteLine("\t[!ERROR!] Touching word found at [{0}, {1}]", x, y);
-                    //throw new CrozzleWordProximityException();
+                    Valid = Valid & false;
                 }
             }
 
-            return true;
+            return Valid;
         }
         #endregion
     }

@@ -3,6 +3,7 @@ using System.IO;
 using System.Drawing;
 using System.Windows.Forms;
 using System.Collections.Generic;
+using System.Timers;
 
 namespace Assignment1
 {
@@ -16,6 +17,10 @@ namespace Assignment1
 
         Crozzle crozzle;
         Wordlist wordlist;
+
+        private static bool timeOver;
+        private static int secondsElapsed;
+        System.Timers.Timer oneSecondTimer;
 
         public formCrozzle()
         {
@@ -32,8 +37,9 @@ namespace Assignment1
             btnSelectCrozzle_Initialize();
             btnSelectWordlist_Initialize();
             btnValidate_Initialize();
+            btnCreate_Initialize();
 
-            if(Directory.Exists(LogFile.folderPath) == false)
+            if (Directory.Exists(LogFile.folderPath) == false)
             {
                 Directory.CreateDirectory(LogFile.folderPath);
             }
@@ -41,7 +47,29 @@ namespace Assignment1
             LogFile.WriteLine(new String('=', 60));
             LogFile.WriteLine("Crozzle Log - {0}", DateTime.Now.ToString());
             LogFile.WriteLine(new String('=', 60));
+
+            oneSecondTimer = new System.Timers.Timer(1000);
+            oneSecondTimer.Elapsed += new ElapsedEventHandler(FiveMinuteCheck);
         }
+
+        #region Crozzle Creation
+        private void FiveMinuteCheck(object sender, EventArgs e)
+        {
+            secondsElapsed += 1;
+            lblTimer.Invoke((MethodInvoker)delegate
+            {
+                int timeLeft = 300 - secondsElapsed;
+                lblTimer.Text = "Time remaining - " + timeLeft / 60 + ":" + timeLeft % 60;
+            });
+            // Five Mins = 300 seconds;
+            if (secondsElapsed > 300)
+            {
+                oneSecondTimer.Stop();
+                timeOver = true;
+            }
+        }
+
+        #endregion
 
         #region Datagrid - Crozzle
         #region Events
@@ -173,17 +201,7 @@ namespace Assignment1
 
                         if (crozzle.ValidFile)
                         {
-                            gridCrozzle_SetSize(crozzle.Width, crozzle.Height);
-                            listCrozzle_SetSize();
-                            lblScoreTitle_SetSize();
-                            lblScore_SetSize();
-                            btnSelectCrozzle_SetSize();
-                            btnSelectWordlist_SetSize();
-                            btnValidate_SetSize();
-
-                            gridCrozzle_LoadData();
-
-                            CrozzleFound = true;
+                            validCrozzle();
                         }
                         else
                         {
@@ -198,6 +216,22 @@ namespace Assignment1
                     }
                 }
             }
+        }
+
+        private void validCrozzle()
+        {
+            gridCrozzle_SetSize(crozzle.Width, crozzle.Height);
+            listCrozzle_SetSize();
+            lblScoreTitle_SetSize();
+            lblScore_SetSize();
+            btnSelectCrozzle_SetSize();
+            btnSelectWordlist_SetSize();
+            btnValidate_SetSize();
+            btnScore_SetSize();
+
+            gridCrozzle_LoadData();
+
+            CrozzleFound = true;
         }
         #endregion
 
@@ -265,7 +299,7 @@ namespace Assignment1
         private void btnValidate_SetSize()
         {
             btnValidate.Location = new Point(
-                gridCrozzle.Width + gridCrozzle.Margin.Horizontal + ((listCrozzle.Width / 2) - (btnValidate.Width / 2)),
+                gridCrozzle.Width + gridCrozzle.Margin.Horizontal + listCrozzle.Width - (btnValidate.Width + PADDING + btnCreate.Width),
                 gridCrozzle.Height + gridCrozzle.Margin.Vertical
                 );
         }
@@ -330,6 +364,62 @@ namespace Assignment1
         }
         #endregion
 
+        #region Button - Create
+        private void btnCreate_Initialize()
+        {
+            btnCreate.Margin = new Padding(PADDING);
+        }
+
+        private void btnScore_SetSize()
+        {
+            btnCreate.Location = new Point(
+                gridCrozzle.Width + gridCrozzle.Margin.Horizontal + listCrozzle.Width - (btnCreate.Width),
+                gridCrozzle.Height + gridCrozzle.Margin.Vertical
+                );
+        }
+
+        private void btnCreate_Click(object sender, EventArgs e)
+        {
+            if (WordlistFound)
+            {
+                if (wordlist.ValidFile)
+                {
+                    Crozzle BestCrozzleSoFar = null;
+                    int BestScoreSoFar = 0;
+                    CrozzleCreation Generator = new CrozzleCreation(wordlist);
+
+                    timeOver = false;
+                    oneSecondTimer.Start();
+                    while (!timeOver)
+                    {
+                        Crozzle currentCrozzle = Generator.GetBestCrozzle();
+                        int currentScore = CrozzleValidation.GetScore(currentCrozzle, wordlist);
+                        if (currentScore > BestScoreSoFar)
+                        {
+                            BestCrozzleSoFar = currentCrozzle;
+                            BestScoreSoFar = currentScore;
+                        }
+                    }
+
+                    crozzle = BestCrozzleSoFar;
+                    lblScore.Text = BestScoreSoFar.ToString();
+                    gridCrozzle_LoadData();
+                    validCrozzle();
+                }
+                else
+                {
+                    MessageBox.Show("Your word list did not pass validation!");
+                    lblScore.Text = "-1";
+                }
+            }
+            else
+            {
+                MessageBox.Show("You must select a word list to perform creation!");
+                lblScore.Text = "-1";
+            }
+        }
+        #endregion
+
         #region Labels - Score
         private void lblScoreTitle_Initialize()
         {
@@ -350,6 +440,6 @@ namespace Assignment1
         {
             lblScore.Location = new Point(gridCrozzle.Width + gridCrozzle.Margin.Horizontal + lblScoreTitle.Width + lblScoreTitle.Margin.Horizontal, PADDING);
         }
-        #endregion
+        #endregion        
     }
 }

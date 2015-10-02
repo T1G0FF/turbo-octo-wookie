@@ -35,6 +35,8 @@
             this.btnValidate = new System.Windows.Forms.Button();
             this.lblScoreTitle = new System.Windows.Forms.Label();
             this.lblScore = new System.Windows.Forms.Label();
+            this.btnCreate = new System.Windows.Forms.Button();
+            this.lblTimer = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.gridCrozzle)).BeginInit();
             this.SuspendLayout();
             // 
@@ -63,7 +65,7 @@
             // 
             // btnSelectCrozzle
             // 
-            this.btnSelectCrozzle.Location = new System.Drawing.Point(62, 318);
+            this.btnSelectCrozzle.Location = new System.Drawing.Point(12, 318);
             this.btnSelectCrozzle.Name = "btnSelectCrozzle";
             this.btnSelectCrozzle.Size = new System.Drawing.Size(100, 23);
             this.btnSelectCrozzle.TabIndex = 2;
@@ -73,7 +75,7 @@
             // 
             // btnSelectWordlist
             // 
-            this.btnSelectWordlist.Location = new System.Drawing.Point(162, 318);
+            this.btnSelectWordlist.Location = new System.Drawing.Point(118, 318);
             this.btnSelectWordlist.Name = "btnSelectWordlist";
             this.btnSelectWordlist.Size = new System.Drawing.Size(100, 23);
             this.btnSelectWordlist.TabIndex = 3;
@@ -83,7 +85,7 @@
             // 
             // btnValidate
             // 
-            this.btnValidate.Location = new System.Drawing.Point(349, 317);
+            this.btnValidate.Location = new System.Drawing.Point(224, 318);
             this.btnValidate.Name = "btnValidate";
             this.btnValidate.Size = new System.Drawing.Size(100, 23);
             this.btnValidate.TabIndex = 4;
@@ -110,6 +112,25 @@
             this.lblScore.TabIndex = 6;
             this.lblScore.Text = "--";
             // 
+            // btnCreate
+            // 
+            this.btnCreate.Location = new System.Drawing.Point(330, 318);
+            this.btnCreate.Name = "btnCreate";
+            this.btnCreate.Size = new System.Drawing.Size(100, 23);
+            this.btnCreate.TabIndex = 7;
+            this.btnCreate.Text = "Create";
+            this.btnCreate.UseVisualStyleBackColor = true;
+            this.btnCreate.Click += new System.EventHandler(this.btnCreate_Click);
+            // 
+            // lblTimer
+            // 
+            this.lblTimer.AutoSize = true;
+            this.lblTimer.Location = new System.Drawing.Point(9, 9);
+            this.lblTimer.Name = "lblTimer";
+            this.lblTimer.Size = new System.Drawing.Size(28, 13);
+            this.lblTimer.TabIndex = 8;
+            this.lblTimer.Text = "5:00";
+            // 
             // formCrozzle
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -117,6 +138,8 @@
             this.AutoSize = true;
             this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.ClientSize = new System.Drawing.Size(484, 352);
+            this.Controls.Add(this.lblTimer);
+            this.Controls.Add(this.btnCreate);
             this.Controls.Add(this.lblScore);
             this.Controls.Add(this.lblScoreTitle);
             this.Controls.Add(this.btnValidate);
@@ -141,6 +164,8 @@
         private System.Windows.Forms.Button btnValidate;
         private System.Windows.Forms.Label lblScoreTitle;
         private System.Windows.Forms.Label lblScore;
+        private System.Windows.Forms.Button btnCreate;
+        private System.Windows.Forms.Label lblTimer;
     }
 }
 
