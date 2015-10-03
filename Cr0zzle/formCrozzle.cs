@@ -4,11 +4,15 @@ using System.Drawing;
 using System.Windows.Forms;
 using System.Collections.Generic;
 using System.Timers;
+using System.ComponentModel;
 
 namespace Assignment1
 {
     public partial class formCrozzle : Form
     {
+        CrozzleCreation Generator;
+        BackgroundWorker bkwk;
+
         const int PADDING = 12;
         const int CELLSIZE = 25;
 
@@ -59,13 +63,25 @@ namespace Assignment1
             lblTimer.Invoke((MethodInvoker)delegate
             {
                 int timeLeft = 300 - secondsElapsed;
-                lblTimer.Text = "Time remaining - " + timeLeft / 60 + ":" + timeLeft % 60;
+                btnCreate.Text = "T-" + timeLeft / 60 + ":" + timeLeft % 60;
             });
-            // Five Mins = 300 seconds;
-            if (secondsElapsed > 300)
+            // Five Mins = 300 seconds, minus 10 to account for finalisation.
+            if (secondsElapsed > 290)
             {
                 oneSecondTimer.Stop();
                 timeOver = true;
+                bkwk.CancelAsync();
+
+                this.Invoke((MethodInvoker)delegate
+                {
+                    GetBest();
+                });
+    
+                btnCreate.Invoke((MethodInvoker)delegate
+                {
+                    btnCreate.Enabled = true;
+                    btnCreate.Text = "Create";
+                });
             }
         }
 
@@ -384,27 +400,25 @@ namespace Assignment1
             {
                 if (wordlist.ValidFile)
                 {
-                    Crozzle BestCrozzleSoFar = null;
-                    int BestScoreSoFar = 0;
-                    CrozzleCreation Generator = new CrozzleCreation(wordlist);
+                    btnCreate.Enabled = false;
+                    Generator = new CrozzleCreation(wordlist);
+
+                    this.Refresh();
 
                     timeOver = false;
                     oneSecondTimer.Start();
-                    while (!timeOver)
-                    {
-                        Crozzle currentCrozzle = Generator.GetBestCrozzle();
-                        int currentScore = CrozzleValidation.GetScore(currentCrozzle, wordlist);
-                        if (currentScore > BestScoreSoFar)
-                        {
-                            BestCrozzleSoFar = currentCrozzle;
-                            BestScoreSoFar = currentScore;
-                        }
-                    }
 
-                    crozzle = BestCrozzleSoFar;
-                    lblScore.Text = BestScoreSoFar.ToString();
-                    gridCrozzle_LoadData();
-                    validCrozzle();
+
+                    bkwk = new BackgroundWorker();
+                    bkwk.WorkerSupportsCancellation = true;
+                    bkwk.WorkerReportsProgress = true;
+
+                    bkwk.DoWork += new DoWorkEventHandler(delegate (object o, DoWorkEventArgs args)
+                    {
+                        Generator.GetBestCrozzle();                        
+                    });
+
+                    bkwk.RunWorkerAsync();                    
                 }
                 else
                 {
@@ -417,6 +431,43 @@ namespace Assignment1
                 MessageBox.Show("You must select a word list to perform creation!");
                 lblScore.Text = "-1";
             }
+        }
+
+        private void GetBest()
+        {
+            Crozzle BestCrozzle = null;
+            int BestScore = 0;
+
+            List<Crozzle> CrozzleList = Generator.Finalise();
+            
+            foreach (Crozzle crozz in CrozzleList)
+            {
+                //////////////////////////
+                crozzle = crozz;
+                lblScore.Text = BestScore.ToString();
+                gridCrozzle_SetSize(crozzle.Width, crozzle.Height);
+                gridCrozzle_LoadData();
+                validCrozzle();
+                this.Refresh();
+                //////////////////////////
+                Crozzle scoredCrozzle = CrozzleValidation.Validate(crozz, wordlist);
+                if (scoredCrozzle != null)
+                {
+                    int CurrentScore = CrozzleValidation.GetScore(scoredCrozzle, wordlist);
+                    if (CurrentScore > BestScore)
+                    {
+                        CrozzleArray temp = crozz.ToCrozzleArray();
+                        BestCrozzle = new Crozzle(temp._crozzleGrid);
+                        BestScore = CurrentScore;
+                    }
+                }
+            }
+
+            crozzle = BestCrozzle;
+            lblScore.Text = BestScore.ToString();
+            gridCrozzle_SetSize(crozzle.Width, crozzle.Height);
+            gridCrozzle_LoadData();
+            validCrozzle();
         }
         #endregion
 

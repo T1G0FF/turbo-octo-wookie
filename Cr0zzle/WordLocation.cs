@@ -16,5 +16,20 @@ namespace Assignment1
             X = x;
             Y = y;
         }
+
+        public static WordLocation Invalid { get { return new WordLocation(-1, -1); } }
+        public static WordLocation Zero { get { return new WordLocation(0, 0); } }
+
+        public static bool AreEqual(WordLocation value, WordLocation compare)
+        {
+            if (value.X != compare.X) return false;
+            if (value.Y != compare.Y) return false;
+            return true;
+        }
+
+        public static bool AreInequal(WordLocation value, WordLocation compare)
+        {
+            return !AreEqual(value, compare);
+        }
     }
 }

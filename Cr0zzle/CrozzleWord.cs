@@ -12,8 +12,15 @@ namespace Assignment1
         public WordLocation Location { get; private set; }
         public int X { get { return Location.X; } }
         public int Y { get { return Location.Y; } }
-
         public int Length { get { return Word.Length; } }
+        public int Score { get; private set; }
+
+        public CrozzleWord(string word, int score)
+        {
+            Word = word;
+            Score = score;
+            Location = new WordLocation(-1, -1); ;
+        }
 
         public CrozzleWord(string word, WordLocation location)
         {
@@ -25,6 +32,16 @@ namespace Assignment1
         {
             Word = word;
             Location = new WordLocation(x,y);
+        }
+
+        public void SetLocation(WordLocation location)
+        {
+            Location = location;
+        }
+
+        public void SetLocation(int x, int y)
+        {
+            Location = new WordLocation(x, y);
         }
     }
 }

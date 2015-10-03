@@ -29,6 +29,8 @@ namespace Assignment1
             : base("Generated Crozzle")
         {
             _crozzle = generated;
+            Height = generated.Length;
+            Width = generated[0].Length;
         }
 
         public Crozzle(string filePath)
@@ -50,6 +52,15 @@ namespace Assignment1
                     LogFile.WriteLine(error);
                 }
             }
+        }
+        #endregion
+
+        #region Public Methods
+        public CrozzleArray ToCrozzleArray()
+        {
+            CrozzleArray result = new CrozzleArray(Height, Width);
+            result.DeepCopy(_crozzle);
+            return result;
         }
         #endregion
 
