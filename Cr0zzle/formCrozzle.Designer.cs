@@ -37,6 +37,7 @@
             this.lblScore = new System.Windows.Forms.Label();
             this.btnCreate = new System.Windows.Forms.Button();
             this.lblTimer = new System.Windows.Forms.Label();
+            this.progTimer = new System.Windows.Forms.ProgressBar();
             ((System.ComponentModel.ISupportInitialize)(this.gridCrozzle)).BeginInit();
             this.SuspendLayout();
             // 
@@ -85,7 +86,7 @@
             // 
             // btnValidate
             // 
-            this.btnValidate.Location = new System.Drawing.Point(224, 318);
+            this.btnValidate.Location = new System.Drawing.Point(266, 318);
             this.btnValidate.Name = "btnValidate";
             this.btnValidate.Size = new System.Drawing.Size(100, 23);
             this.btnValidate.TabIndex = 4;
@@ -114,7 +115,7 @@
             // 
             // btnCreate
             // 
-            this.btnCreate.Location = new System.Drawing.Point(330, 318);
+            this.btnCreate.Location = new System.Drawing.Point(372, 318);
             this.btnCreate.Name = "btnCreate";
             this.btnCreate.Size = new System.Drawing.Size(100, 23);
             this.btnCreate.TabIndex = 7;
@@ -125,11 +126,23 @@
             // lblTimer
             // 
             this.lblTimer.AutoSize = true;
-            this.lblTimer.Location = new System.Drawing.Point(9, 9);
+            this.lblTimer.Location = new System.Drawing.Point(142, 170);
             this.lblTimer.Name = "lblTimer";
             this.lblTimer.Size = new System.Drawing.Size(28, 13);
             this.lblTimer.TabIndex = 8;
             this.lblTimer.Text = "5:00";
+            this.lblTimer.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.lblTimer.UseWaitCursor = true;
+            this.lblTimer.Visible = false;
+            // 
+            // progTimer
+            // 
+            this.progTimer.Location = new System.Drawing.Point(12, 144);
+            this.progTimer.Name = "progTimer";
+            this.progTimer.Size = new System.Drawing.Size(300, 23);
+            this.progTimer.TabIndex = 9;
+            this.progTimer.UseWaitCursor = true;
+            this.progTimer.Visible = false;
             // 
             // formCrozzle
             // 
@@ -138,6 +151,7 @@
             this.AutoSize = true;
             this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.ClientSize = new System.Drawing.Size(484, 352);
+            this.Controls.Add(this.progTimer);
             this.Controls.Add(this.lblTimer);
             this.Controls.Add(this.btnCreate);
             this.Controls.Add(this.lblScore);
@@ -166,6 +180,7 @@
         private System.Windows.Forms.Label lblScore;
         private System.Windows.Forms.Button btnCreate;
         private System.Windows.Forms.Label lblTimer;
+        private System.Windows.Forms.ProgressBar progTimer;
     }
 }
 

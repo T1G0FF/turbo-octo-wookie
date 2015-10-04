@@ -11,10 +11,11 @@ namespace Assignment1
     public partial class formCrozzle : Form
     {
         CrozzleCreation Generator;
-        BackgroundWorker bkwk;
+        BackgroundWorker bckwrk;
 
         const int PADDING = 12;
         const int CELLSIZE = 25;
+        const int FIVEMINUTES = 300; // Five Mins = 300 seconds
 
         private bool CrozzleFound = false;
         private bool WordlistFound = false;
@@ -42,6 +43,8 @@ namespace Assignment1
             btnSelectWordlist_Initialize();
             btnValidate_Initialize();
             btnCreate_Initialize();
+            lblTimer_Initialize();
+            progTimer_Initialize();
 
             if (Directory.Exists(LogFile.folderPath) == false)
             {
@@ -62,25 +65,45 @@ namespace Assignment1
             secondsElapsed += 1;
             lblTimer.Invoke((MethodInvoker)delegate
             {
-                int timeLeft = 300 - secondsElapsed;
-                btnCreate.Text = "T-" + timeLeft / 60 + ":" + timeLeft % 60;
+                int timeLeft = FIVEMINUTES - secondsElapsed;
+                string minutes = (timeLeft / 60).ToString();
+
+                string seconds = ("00" + (timeLeft % 60).ToString());
+                seconds = seconds.Substring(seconds.Length - 2);
+
+                string time = minutes + ":" + seconds;
+                btnCreate.Text = time;
+                lblTimer.Text = time;
+                progTimer.PerformStep();
+                
             });
-            // Five Mins = 300 seconds, minus 10 to account for finalisation.
-            if (secondsElapsed > 290)
+            
+            if (secondsElapsed >= FIVEMINUTES)
             {
                 oneSecondTimer.Stop();
-                timeOver = true;
-                bkwk.CancelAsync();
+                secondsElapsed = 0;
 
-                this.Invoke((MethodInvoker)delegate
-                {
-                    GetBest();
-                });
-    
                 btnCreate.Invoke((MethodInvoker)delegate
                 {
                     btnCreate.Enabled = true;
                     btnCreate.Text = "Create";
+                });
+
+                this.Invoke((MethodInvoker)delegate
+                {
+                    this.UseWaitCursor = false;
+                    progTimer.Visible = false;
+                    lblTimer.Visible = false;
+                });
+            }
+            else if (secondsElapsed >= (FIVEMINUTES - 10))
+            {
+                timeOver = true;
+                bckwrk.CancelAsync();
+
+                this.Invoke((MethodInvoker)delegate
+                {
+                    GetBest();
                 });
             }
         }
@@ -217,7 +240,7 @@ namespace Assignment1
 
                         if (crozzle.ValidFile)
                         {
-                            validCrozzle();
+                            validCrozzleUpdateUI();
                         }
                         else
                         {
@@ -234,7 +257,7 @@ namespace Assignment1
             }
         }
 
-        private void validCrozzle()
+        private void validCrozzleUpdateUI()
         {
             gridCrozzle_SetSize(crozzle.Width, crozzle.Height);
             listCrozzle_SetSize();
@@ -244,6 +267,8 @@ namespace Assignment1
             btnSelectWordlist_SetSize();
             btnValidate_SetSize();
             btnScore_SetSize();
+            lblTimer_SetSize();
+            progTimer_SetSize();
 
             gridCrozzle_LoadData();
 
@@ -401,6 +426,9 @@ namespace Assignment1
                 if (wordlist.ValidFile)
                 {
                     btnCreate.Enabled = false;
+                    this.UseWaitCursor = true;
+                    progTimer.Visible = true;
+                    lblTimer.Visible = true;
                     Generator = new CrozzleCreation(wordlist);
 
                     this.Refresh();
@@ -409,16 +437,16 @@ namespace Assignment1
                     oneSecondTimer.Start();
 
 
-                    bkwk = new BackgroundWorker();
-                    bkwk.WorkerSupportsCancellation = true;
-                    bkwk.WorkerReportsProgress = true;
+                    bckwrk = new BackgroundWorker();
+                    bckwrk.WorkerSupportsCancellation = true;
+                    bckwrk.WorkerReportsProgress = true;
 
-                    bkwk.DoWork += new DoWorkEventHandler(delegate (object o, DoWorkEventArgs args)
+                    bckwrk.DoWork += new DoWorkEventHandler(delegate (object o, DoWorkEventArgs args)
                     {
                         Generator.GetBestCrozzle();                        
                     });
 
-                    bkwk.RunWorkerAsync();                    
+                    bckwrk.RunWorkerAsync();                    
                 }
                 else
                 {
@@ -445,9 +473,7 @@ namespace Assignment1
                 //////////////////////////
                 crozzle = crozz;
                 lblScore.Text = BestScore.ToString();
-                gridCrozzle_SetSize(crozzle.Width, crozzle.Height);
-                gridCrozzle_LoadData();
-                validCrozzle();
+                validCrozzleUpdateUI();
                 this.Refresh();
                 //////////////////////////
                 Crozzle scoredCrozzle = CrozzleValidation.Validate(crozz, wordlist);
@@ -467,7 +493,7 @@ namespace Assignment1
             lblScore.Text = BestScore.ToString();
             gridCrozzle_SetSize(crozzle.Width, crozzle.Height);
             gridCrozzle_LoadData();
-            validCrozzle();
+            validCrozzleUpdateUI();
         }
         #endregion
 
@@ -491,6 +517,38 @@ namespace Assignment1
         {
             lblScore.Location = new Point(gridCrozzle.Width + gridCrozzle.Margin.Horizontal + lblScoreTitle.Width + lblScoreTitle.Margin.Horizontal, PADDING);
         }
-        #endregion        
+        #endregion
+
+        #region Timer Components
+        private void lblTimer_Initialize()
+        {
+            lblTimer.Margin = new Padding(PADDING);
+        }
+
+        private void lblTimer_SetSize()
+        {
+            lblTimer.Location = new Point(
+                            ((gridCrozzle.Width + gridCrozzle.Margin.Horizontal) / 2) - (lblTimer.Width / 2),
+                            ((gridCrozzle.Height + gridCrozzle.Margin.Vertical) / 2) - (lblTimer.Height / 2) + (progTimer.Height / 2));
+        }
+        
+        private void progTimer_Initialize()
+        {
+            progTimer.Margin = new Padding(PADDING);
+            progTimer.Maximum = 300;
+            progTimer.Step = 1;
+            progTimer.Value = 0;
+            progTimer_SetSize();
+            lblTimer_SetSize();
+        }
+
+        private void progTimer_SetSize()
+        {
+            progTimer.Width = gridCrozzle.Width - 2;
+            progTimer.Location = new Point(
+                            ((gridCrozzle.Width + gridCrozzle.Margin.Horizontal) / 2) - (progTimer.Width / 2),
+                            ((gridCrozzle.Height + gridCrozzle.Margin.Vertical) / 2) - progTimer.Height);
+        }
+        #endregion
     }
 }
