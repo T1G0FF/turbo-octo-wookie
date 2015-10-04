@@ -5,17 +5,22 @@ using System.Windows.Forms;
 using System.Collections.Generic;
 using System.Timers;
 using System.ComponentModel;
+using System.Linq;
 
 namespace Assignment1
 {
     public partial class formCrozzle : Form
     {
-        CrozzleCreation Generator;
-        BackgroundWorker bckwrk;
+        CrozzleCreation HoriGenerator;
+        CrozzleCreation VertGenerator;
+        BackgroundWorker HoriWorker;
+        BackgroundWorker VertWorker;
+        BackgroundWorker FinalWorker;
 
         const int PADDING = 12;
         const int CELLSIZE = 25;
         const int FIVEMINUTES = 300; // Five Mins = 300 seconds
+        const int FINALISATION = 30;
 
         private bool CrozzleFound = false;
         private bool WordlistFound = false;
@@ -88,23 +93,20 @@ namespace Assignment1
                     btnCreate.Enabled = true;
                     btnCreate.Text = "Create";
                 });
-
-                this.Invoke((MethodInvoker)delegate
-                {
-                    this.UseWaitCursor = false;
-                    progTimer.Visible = false;
-                    lblTimer.Visible = false;
-                });
             }
-            else if (secondsElapsed >= (FIVEMINUTES - 10))
+            else if (secondsElapsed >= (FIVEMINUTES - FINALISATION))
             {
                 timeOver = true;
-                bckwrk.CancelAsync();
+                HoriWorker.CancelAsync();
+                VertWorker.CancelAsync();
 
-                this.Invoke((MethodInvoker)delegate
+                if(FinalWorker.IsBusy == false)
                 {
-                    GetBest();
-                });
+                    this.Invoke((MethodInvoker)delegate
+                    {
+                        FinalWorker.RunWorkerAsync();
+                    });
+                }
             }
         }
 
@@ -429,7 +431,9 @@ namespace Assignment1
                     this.UseWaitCursor = true;
                     progTimer.Visible = true;
                     lblTimer.Visible = true;
-                    Generator = new CrozzleCreation(wordlist);
+                                        
+                    HoriGenerator = new CrozzleCreation(wordlist, CrozzleCreation.Direction.Horizontal);
+                    VertGenerator = new CrozzleCreation(wordlist, CrozzleCreation.Direction.Vertical);
 
                     this.Refresh();
 
@@ -437,16 +441,34 @@ namespace Assignment1
                     oneSecondTimer.Start();
 
 
-                    bckwrk = new BackgroundWorker();
-                    bckwrk.WorkerSupportsCancellation = true;
-                    bckwrk.WorkerReportsProgress = true;
+                    HoriWorker = new BackgroundWorker();
+                    HoriWorker.WorkerSupportsCancellation = true;
+                    HoriWorker.WorkerReportsProgress = true;
 
-                    bckwrk.DoWork += new DoWorkEventHandler(delegate (object o, DoWorkEventArgs args)
+                    HoriWorker.DoWork += new DoWorkEventHandler(delegate (object o, DoWorkEventArgs args)
                     {
-                        Generator.GetBestCrozzle();                        
+                        HoriGenerator.GetBestCrozzle();
                     });
 
-                    bckwrk.RunWorkerAsync();                    
+                    VertWorker = new BackgroundWorker();
+                    VertWorker.WorkerSupportsCancellation = true;
+                    VertWorker.WorkerReportsProgress = true;
+
+                    VertWorker.DoWork += new DoWorkEventHandler(delegate (object o, DoWorkEventArgs args)
+                    {
+                        VertGenerator.GetBestCrozzle();
+                    });
+
+                    HoriWorker.RunWorkerAsync();
+                    VertWorker.RunWorkerAsync();
+
+                    FinalWorker = new BackgroundWorker();
+                    FinalWorker.WorkerSupportsCancellation = true;
+                    FinalWorker.WorkerReportsProgress = true;
+                    FinalWorker.DoWork += new DoWorkEventHandler(delegate (object o, DoWorkEventArgs args)
+                    {
+                        GetBest();
+                    });
                 }
                 else
                 {
@@ -466,15 +488,33 @@ namespace Assignment1
             Crozzle BestCrozzle = null;
             int BestScore = 0;
 
-            List<Crozzle> CrozzleList = Generator.Finalise();
-            
-            foreach (Crozzle crozz in CrozzleList)
+            List<Crozzle> HoriCrozzleList = HoriGenerator.Finalise();
+            List<Crozzle> VertCrozzleList = VertGenerator.Finalise();
+
+            List<Crozzle> MasterList = HoriCrozzleList.Concat(VertCrozzleList).ToList();
+
+            this.Invoke((MethodInvoker)delegate
             {
+                lblTimer.Text = "Finding best score... 0/" + MasterList.Count.ToString();
+                progTimer.Maximum = MasterList.Count;
+                progTimer.Step = 1;
+                progTimer.Value = 0;
+            });
+
+            int counter = 0;
+            foreach (Crozzle crozz in MasterList)
+            {
+                counter++;
                 //////////////////////////
                 crozzle = crozz;
-                lblScore.Text = BestScore.ToString();
-                validCrozzleUpdateUI();
-                this.Refresh();
+                this.Invoke((MethodInvoker)delegate
+                {
+                    lblTimer.Text = "Finding best score... " + counter + "/" + MasterList.Count.ToString();
+                    lblScore.Text = BestScore.ToString();
+                    validCrozzleUpdateUI();
+                    progTimer.PerformStep();
+                    this.Refresh();
+                });
                 //////////////////////////
                 Crozzle scoredCrozzle = CrozzleValidation.Validate(crozz, wordlist);
                 if (scoredCrozzle != null)
@@ -489,11 +529,23 @@ namespace Assignment1
                 }
             }
 
-            crozzle = BestCrozzle;
-            lblScore.Text = BestScore.ToString();
-            gridCrozzle_SetSize(crozzle.Width, crozzle.Height);
-            gridCrozzle_LoadData();
-            validCrozzleUpdateUI();
+            this.Invoke((MethodInvoker)delegate
+            {
+                crozzle = BestCrozzle;
+                lblScore.Text = BestScore.ToString();
+
+                progTimer.Visible = false;
+                progTimer.Maximum = FIVEMINUTES;
+                progTimer.Step = 1;
+                progTimer.Value = 0;
+
+                lblTimer.Visible = false;
+                lblTimer.Text = "5:00";
+
+                this.UseWaitCursor = false;
+
+                validCrozzleUpdateUI();
+            });
         }
         #endregion
 
@@ -535,7 +587,7 @@ namespace Assignment1
         private void progTimer_Initialize()
         {
             progTimer.Margin = new Padding(PADDING);
-            progTimer.Maximum = 300;
+            progTimer.Maximum = FIVEMINUTES;
             progTimer.Step = 1;
             progTimer.Value = 0;
             progTimer_SetSize();

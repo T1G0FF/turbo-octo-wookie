@@ -6,7 +6,11 @@ namespace Assignment1
 {
     class CrozzleCreation
     {
-        private struct Direction { public static bool Horizontal = true; public static bool Vertical = false; }
+        public struct Direction
+        {
+            public static bool Horizontal = true;
+            public static bool Vertical = false;
+        }
 
         private Wordlist currentWordlist;
         private List<string> WordsByScoreAll;
@@ -21,12 +25,15 @@ namespace Assignment1
         private int currRow     = 0;
         private int prevColumn  = 0;
         private int currColumn  = 0;
+        private bool FirstDirection;
 
         public int TotalWords   = 0;
 
-        public CrozzleCreation(Wordlist wordlist)
+        public CrozzleCreation(Wordlist wordlist, bool direction)
         {
             currentWordlist = wordlist;
+            FirstDirection = direction;
+
             currentCrozzle = new CrozzleArray(wordlist.Height, wordlist.Width);
             GeneratedList = new List<Crozzle>();
 
@@ -78,7 +85,7 @@ namespace Assignment1
 
             wordIndex++;
 
-            if (wordIndex != WordsByScoreCurrent.Count || wordIndex + 1 < WordsByScoreAll.Count)
+            if ((wordIndex == WordsByScoreCurrent.Count || wordIndex + 1 >= WordsByScoreAll.Count) == false)
             {
                 currentCrozzle.FillWithBlanks();
 
@@ -88,16 +95,11 @@ namespace Assignment1
                 currColumn = 0;
 
                 PlaceFirstWord(WordsByScoreCurrent[wordIndex]);                
-#if DEBUG
-                displayStatus();
-#endif
 
-                if (TryPlacement(prevWord, 1, 0, 0, Direction.Vertical))
+                if (TryPlacement(prevWord, 1, 0, 0, !FirstDirection))
                 {
                     CheckAndAdd(currentCrozzle);
-#if DEBUG
-                    displayStatus();
-#endif
+
                     if (currWordSegement.Length <= 1)
                     {
                         end = true;
@@ -106,21 +108,43 @@ namespace Assignment1
                     {
                         currWordSegement = currWordSegement.Remove(0, 1);
 
-                        if (currColumn == prevColumn)
+                        if(FirstDirection == Direction.Horizontal)
                         {
-                            if (!TryPlacement(currWordSegement, 1, currRow, currColumn + 2, Direction.Horizontal))
+                            if (currColumn == prevColumn)
                             {
-                                end = true;
+                                if (!TryPlacement(currWordSegement, 1, currRow, currColumn + 2, Direction.Horizontal))
+                                {
+                                    end = true;
+                                }
+                            }
+                            else
+                            {
+
+                                if (!TryPlacement(currWordSegement, currColumn - prevColumn - 1, currRow, currColumn + 1, Direction.Horizontal))
+                                {
+                                    end = true;
+                                }
                             }
                         }
                         else
                         {
-                            
-                            if (!TryPlacement(currWordSegement, currColumn - prevColumn - 1, currRow, currColumn + 1, Direction.Horizontal))
+                            if (currRow == prevRow)
                             {
-                                end = true;
+                                if (!TryPlacement(currWordSegement, 1, currRow + 2, currColumn, Direction.Vertical))
+                                {
+                                    end = true;
+                                }
+                            }
+                            else
+                            {
+
+                                if (!TryPlacement(currWordSegement, currRow - prevRow - 1, currRow + 1, currColumn, Direction.Vertical))
+                                {
+                                    end = true;
+                                }
                             }
                         }
+                        
                     }
                 }
                 else
@@ -128,9 +152,6 @@ namespace Assignment1
                     end = true;
                 }
                 
-#if DEBUG
-                displayStatus();
-#endif
                 if (!end)
                 {
                     if (currWordSegement.Length <= 1)
@@ -141,40 +162,70 @@ namespace Assignment1
                     {
                         currWordSegement = currWordSegement.Remove(0, 1);
 
-                        while (TryPlacement(currWordSegement, currRow - prevRow - 1, currRow + 2, currColumn, Direction.Vertical))
+                        if(FirstDirection == Direction.Horizontal)
                         {
-                            CheckAndAdd(currentCrozzle);
-#if DEBUG
-                            displayStatus();                            
-#endif
-                            if (currWordSegement.Length <= 1)
+                            while (TryPlacement(currWordSegement, currRow - prevRow - 1, currRow + 2, currColumn, Direction.Vertical))
                             {
-                                end = true;
-                            }
-                            else
-                            {
-                                currWordSegement = currWordSegement.Remove(0, 1);
+                                CheckAndAdd(currentCrozzle);
 
-                                if (!TryPlacement(currWordSegement, currColumn - currColumn - 1, currRow, currColumn + 2, Direction.Horizontal))
+                                if (currWordSegement.Length <= 1)
                                 {
                                     end = true;
                                 }
                                 else
-                                {   
-#if DEBUG
-                                    displayStatus();
-#endif
-                                    if (currWordSegement.Length <= 1)
+                                {
+                                    currWordSegement = currWordSegement.Remove(0, 1);
+
+                                    if (!TryPlacement(currWordSegement, currColumn - currColumn - 1, currRow, currColumn + 2, Direction.Horizontal))
                                     {
                                         end = true;
                                     }
-                                    currWordSegement = currWordSegement.Remove(0, 1);
+                                    else
+                                    {
+                                        if (currWordSegement.Length <= 1)
+                                        {
+                                            end = true;
+                                        }
+                                        currWordSegement = currWordSegement.Remove(0, 1);
+                                    }
+                                    CheckAndAdd(currentCrozzle);
+                                    if (end) break;
                                 }
-                                CheckAndAdd(currentCrozzle);
-                                if (end) break;
                             }
+                            end = true;
                         }
-                        end = true;
+                        else
+                        {
+                            while (TryPlacement(currWordSegement, currColumn - currColumn - 1, currRow, currColumn + 2, Direction.Horizontal))
+                            {
+                                CheckAndAdd(currentCrozzle);
+                                if (currWordSegement.Length <= 1)
+                                {
+                                    end = true;
+                                }
+                                else
+                                {
+                                    currWordSegement = currWordSegement.Remove(0, 1);
+
+                                    if (!TryPlacement(currWordSegement, currRow - prevRow - 1, currRow + 2, currColumn, Direction.Vertical))
+                                    {
+                                        end = true;
+                                    }
+                                    else
+                                    {
+                                        if (currWordSegement.Length <= 1)
+                                        {
+                                            end = true;
+                                        }
+                                        currWordSegement = currWordSegement.Remove(0, 1);
+                                    }
+                                    CheckAndAdd(currentCrozzle);
+                                    if (end) break;
+                                }
+                            }
+                            end = true;
+                        }
+                        
                     }
                 }
             }
@@ -195,7 +246,7 @@ namespace Assignment1
         {
             currWordSegement = word;
             prevWord = word;
-            PlaceWord(word, 0, 0, Direction.Horizontal);
+            PlaceWord(word, 0, 0, FirstDirection);
         }
 
         private void PlaceWord(string word, int row, int column, bool horizontal)
@@ -381,34 +432,5 @@ namespace Assignment1
             return result;
         }
         #endregion
-
-#if DEBUG
-        public void displayStatus()
-        {
-            displayStatus(currentCrozzle);
-        }
-
-        public void displayStatus(CrozzleArray crozz)
-        {
-            string line = new string('=', 60);
-            LogFile.WriteLine(line);
-            for (int y = 0; y < crozz.Height; y++)
-            {
-                for (int x = 0; x < crozz.Width; x++)
-                {
-                    if (crozz[x, y] == ' ')
-                    {
-                        LogFile.Write("-" + "|");
-                    }
-                    else
-                    {
-                        LogFile.Write(crozz[x, y] + "|");
-                    }
-                }
-                LogFile.WriteLine("");
-            }
-            LogFile.WriteLine(line);
-        }
-#endif
     }
 }
